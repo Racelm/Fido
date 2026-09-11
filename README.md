@@ -21,6 +21,13 @@ Fido est une plateforme SaaS de collaboration entre fiduciaires / cabinets compt
 
 ## Démarrage local
 
+1. Créez un projet Supabase et renseignez `NEXT_PUBLIC_SUPABASE_URL` et
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` dans `.env.local`.
+2. Exécutez `supabase/schema.sql`, puis les migrations de
+   `supabase/migrations/` dans l'éditeur SQL Supabase. La migration Phase 1
+   crée automatiquement l'organisation et le profil `owner` à l'inscription.
+3. Activez la confirmation e-mail dans Supabase Auth selon votre politique.
+
 ```bash
 npm install
 npm run dev

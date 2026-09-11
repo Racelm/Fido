@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [name, setName] = useState('')
   const [cabinet, setCabinet] = useState('')
@@ -21,22 +20,20 @@ export default function LoginPage() {
     setError('')
     setNotice('')
     setLoading(true)
+    const supabase = createClient()
 
     if (mode === 'signup') {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: name } },
+        options: { data: { full_name: name, cabinet_name: cabinet } },
       })
       if (signUpError) {
         setError(signUpError.message)
       } else if (data.session) {
-        const { error: cabinetError } = await supabase.rpc('create_cabinet', {
-          cabinet_name: cabinet,
-          user_name: name,
-        })
-        if (cabinetError) setError(cabinetError.message)
-        else router.push('/')
+        // The database trigger creates the organization and owner profile atomically.
+        router.replace('/')
+        router.refresh()
       } else {
         setNotice('Vérifiez votre e-mail pour confirmer votre compte, puis connectez-vous.')
         setMode('login')
