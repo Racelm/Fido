@@ -71,32 +71,41 @@ create index documents_client_idx on public.documents(client_id);
 create index messages_client_idx on public.messages(client_id);
 
 create or replace function public.is_org_member(target_org uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
+returns boolean language sql stable security definer set search_path = public
 as $$
-  select exists (
-    select 1 from public.profiles
-    where id = auth.uid() and organization_id = target_org
-  );
+  select exists (select 1 from public.profiles where id = auth.uid() and organization_id = target_org);
 $$;
 
 create or replace function public.is_client_user(target_client uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
+returns boolean language sql stable security definer set search_path = public
 as $$
   select exists (
-    select 1
-    from public.clients c
+    select 1 from public.clients c
     join public.profiles p on p.id = c.profile_id
     where c.id = target_client and p.id = auth.uid() and p.role = 'client'
   );
 $$;
+
+create or replace function public.create_cabinet(cabinet_name text, user_name text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare new_org uuid;
+begin
+  if auth.uid() is null then raise exception 'Not authenticated'; end if;
+  if exists (select 1 from public.profiles where id = auth.uid()) then
+    return (select organization_id from public.profiles where id = auth.uid());
+  end if;
+  insert into public.organizations(name) values (cabinet_name) returning id into new_org;
+  insert into public.profiles(id, organization_id, full_name, role)
+    values (auth.uid(), new_org, user_name, 'owner');
+  return new_org;
+end;
+$$;
+
+grant execute on function public.create_cabinet(text, text) to authenticated;
 
 alter table public.organizations enable row level security;
 alter table public.profiles enable row level security;
@@ -105,85 +114,44 @@ alter table public.document_requests enable row level security;
 alter table public.documents enable row level security;
 alter table public.messages enable row level security;
 
-create policy "members can view organization"
-on public.organizations for select
-using (public.is_org_member(id));
+create policy "members can view organization" on public.organizations for select using (public.is_org_member(id));
+create policy "users can view own profile" on public.profiles for select using (id = auth.uid() or public.is_org_member(organization_id));
 
-create policy "users can view own profile"
-on public.profiles for select
-using (id = auth.uid() or public.is_org_member(organization_id));
-
-create policy "members can view clients"
-on public.clients for select
+create policy "members can view clients" on public.clients for select
 using (public.is_org_member(organization_id) or public.is_client_user(id));
+create policy "staff can manage clients" on public.clients for all
+using (public.is_org_member(organization_id) and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('owner','staff')))
+with check (public.is_org_member(organization_id) and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('owner','staff')));
 
-create policy "staff can manage clients"
-on public.clients for all
-using (
-  public.is_org_member(organization_id)
-  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('owner','staff'))
-)
-with check (
-  public.is_org_member(organization_id)
-  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('owner','staff'))
-);
-
-create policy "members can view requests"
-on public.document_requests for select
+create policy "members can view requests" on public.document_requests for select
 using (public.is_org_member(organization_id) or public.is_client_user(client_id));
-
-create policy "staff can create requests"
-on public.document_requests for insert
-with check (
-  public.is_org_member(organization_id)
-  and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('owner','staff'))
-);
-
-create policy "staff or client can update request"
-on public.document_requests for update
+create policy "staff can create requests" on public.document_requests for insert
+with check (public.is_org_member(organization_id) and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('owner','staff')));
+create policy "staff or client can update request" on public.document_requests for update
 using (public.is_org_member(organization_id) or public.is_client_user(client_id))
 with check (public.is_org_member(organization_id) or public.is_client_user(client_id));
 
-create policy "members can view documents"
-on public.documents for select
+create policy "members can view documents" on public.documents for select
 using (public.is_org_member(organization_id) or public.is_client_user(client_id));
-
-create policy "authenticated users can upload documents"
-on public.documents for insert
+create policy "authenticated users can upload documents" on public.documents for insert
 with check (public.is_org_member(organization_id) or public.is_client_user(client_id));
 
-create policy "members can view messages"
-on public.messages for select
+create policy "members can view messages" on public.messages for select
 using (public.is_org_member(organization_id) or public.is_client_user(client_id));
+create policy "members can send messages" on public.messages for insert
+with check (sender_id = auth.uid() and (public.is_org_member(organization_id) or public.is_client_user(client_id)));
 
-create policy "members can send messages"
-on public.messages for insert
-with check (
-  sender_id = auth.uid()
-  and (public.is_org_member(organization_id) or public.is_client_user(client_id))
-);
-
--- Private document bucket. File access is controlled by Storage RLS plus the
--- application database policies above.
 insert into storage.buckets (id, name, public)
 values ('documents', 'documents', false)
 on conflict (id) do nothing;
 
-create policy "Fido document read access"
-on storage.objects for select
+create policy "Fido document read access" on storage.objects for select
 using (
-  bucket_id = 'documents'
-  and exists (
-    select 1
-    from public.documents d
+  bucket_id = 'documents' and exists (
+    select 1 from public.documents d
     where d.storage_path = name
       and (public.is_org_member(d.organization_id) or public.is_client_user(d.client_id))
   )
 );
-
-create policy "Fido document upload access"
-on storage.objects for insert
-with check (
-  bucket_id = 'documents'
-  and auth.role() = 'authenticated'
-);
+create policy "Fido document upload access" on storage.objects for insert
+with check (bucket_id = 'documents' and auth.role() = 'authenticated');
