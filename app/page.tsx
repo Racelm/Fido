@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/app/actions/auth'
@@ -32,7 +33,7 @@ export default async function Home() {
     supabase.from('documents').select('*', { count: 'exact', head: true }).eq('organization_id', organizationId!),
   ])
 
-  return <main className="app"><aside className="sidebar"><div className="brand">Fido<span>.</span></div><nav className="nav"><a className="active" href="/">⌂ &nbsp; Tableau de bord</a><a href="#clients">♙ &nbsp; Clients</a><a href="#documents">▣ &nbsp; Documents</a><a href="#messages">✉ &nbsp; Messages</a><a href="#settings">⚙ &nbsp; Paramètres</a></nav></aside><section className="main"><Header profile={profile} /><div className="grid"><Metric label="Clients actifs" value={clients.count ?? 0} /><Metric label="Demandes ouvertes" value={requests.count ?? 0} /><Metric label="Documents reçus" value={documents.count ?? 0} /><Metric label="Messages non lus" value="—" note="Bientôt disponible" /></div><section className="section card"><div className="section-title">Bienvenue dans Fido</div><p className="auth-copy">Votre espace cabinet est prêt. Ajoutez vos clients pour commencer à collaborer de façon sécurisée.</p></section></section></main>
+  return <main className="app"><aside className="sidebar"><div className="brand">Fido<span>.</span></div><nav className="nav"><Link className="active" href="/">⌂ &nbsp; Tableau de bord</Link><Link href="/clients">♙ &nbsp; Clients</Link><Link href="/documents">▣ &nbsp; Documents</Link><Link href="/messages">✉ &nbsp; Messages</Link><Link href="/settings">⚙ &nbsp; Paramètres</Link></nav></aside><section className="main"><Header profile={profile} /><div className="grid"><Metric label="Clients actifs" value={clients.count ?? 0} /><Metric label="Demandes ouvertes" value={requests.count ?? 0} /><Metric label="Documents reçus" value={documents.count ?? 0} /><Metric label="Messages non lus" value="—" note="Bientôt disponible" /></div><section className="section card"><div className="section-header"><div><div className="section-title">Bienvenue dans Fido</div><p className="auth-copy">Votre espace cabinet est prêt. Ajoutez vos clients pour commencer à collaborer de façon sécurisée.</p></div><Link className="primary" href="/clients">Ajouter un client</Link></div></section></section></main>
 }
 
 function Header({ profile }: { profile: Profile }) {
