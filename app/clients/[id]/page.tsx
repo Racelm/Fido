@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import InviteButton from './InviteButton'
 import RequestForm from './RequestForm'
+import MessageForm from '@/app/client/MessageForm'
+import DownloadButton from '@/app/documents/DownloadButton'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -19,7 +21,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     supabase.from('messages').select('id,body,created_at,sender_id').eq('client_id', id).order('created_at', { ascending: false }).limit(10),
     supabase.from('client_invitations').select('expires_at,accepted_at').eq('client_id', id).is('accepted_at', null).order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ])
-  return <main className="app"><aside className="sidebar"><div className="brand">Fido<span>.</span></div><nav className="nav"><Link href="/">⌂ &nbsp; Tableau de bord</Link><Link className="active" href="/clients">♙ &nbsp; Clients</Link><Link href="/documents">▣ &nbsp; Documents</Link><Link href="/messages">✉ &nbsp; Messages</Link><Link href="/settings">⚙ &nbsp; Paramètres</Link></nav></aside><section className="main">
+  return <main className="app"><aside className="sidebar"><div className="brand">Fido<span>.</span></div><nav className="nav"><Link href="/">⌂ &nbsp; Tableau de bord</Link><Link className="active" href="/clients">♙ &nbsp; Clients</Link><Link href="/documents">▣ &nbsp; Documents</Link><Link href="/requests">✓ &nbsp; À traiter</Link><Link href="/messages">✉ &nbsp; Messages</Link><Link href="/notifications">● &nbsp; Notifications</Link><Link href="/settings">⚙ &nbsp; Paramètres</Link></nav></aside><section className="main">
     <header className="topbar"><div><div className="eyebrow">{profile.organizations?.name}</div><h1 className="title">Espace client</h1></div><div className="user"><span>{profile.full_name || 'Utilisateur'}</span><div className="avatar">{(profile.full_name || 'U').charAt(0).toUpperCase()}</div></div></header>
     <Link className="back-link" href="/clients">← Retour aux clients</Link>
     <section className="card detail-card"><div className="section-header"><div><div className="section-title">{client.company_name}</div><p className="muted">Espace de collaboration sécurisé</p></div><span className={`status status-${client.status}`}>{client.status === 'active' ? 'Actif' : client.status === 'invited' ? 'Invité' : 'Inactif'}</span></div><div className="detail-meta"><div className="meta-box"><div className="meta-label">Contact</div><div className="meta-value">{client.contact_name || '—'}</div></div><div className="meta-box"><div className="meta-label">E-mail</div><div className="meta-value">{client.email || '—'}</div></div><div className="meta-box"><div className="meta-label">Téléphone</div><div className="meta-value">{client.phone || '—'}</div></div></div><InviteButton clientId={client.id} existingInvitation={invitation ? { expiresAt: invitation.expires_at } : null} /></section>
