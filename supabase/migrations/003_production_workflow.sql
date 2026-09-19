@@ -82,12 +82,12 @@ with check (
   and auth.role() = 'authenticated'
   and (
     (
-      public.is_org_member((storage.foldername(name))[1]::uuid)
+      public.is_org_member(public.safe_uuid((storage.foldername(name))[1]))
       and (storage.foldername(name))[2] is not null
     )
     or
     (
-      public.is_client_user((storage.foldername(name))[2]::uuid)
+      public.is_client_user(public.safe_uuid((storage.foldername(name))[2]))
       and (storage.foldername(name))[1] is not null
     )
   )
@@ -102,6 +102,17 @@ using (
     or public.is_client_user((storage.foldername(name))[2]::uuid)
   )
 );
+
+create or replace function public.safe_uuid(value text)
+returns uuid
+language plpgsql immutable
+as $
+begin
+  return value::uuid;
+exception when others then
+  return null;
+end;
+$;
 
 create index if not exists documents_request_idx on public.documents(request_id, created_at desc);
 create index if not exists requests_org_status_idx on public.document_requests(organization_id, status, due_date);
