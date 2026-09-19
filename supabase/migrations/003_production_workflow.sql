@@ -142,3 +142,51 @@ drop trigger if exists validate_document_tenant_trigger on public.documents;
 create trigger validate_document_tenant_trigger
 before insert on public.documents
 for each row execute procedure public.validate_document_tenant();
+
+
+create or replace function public.notify_document_received()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.notifications(organization_id, recipient_id, type, title, body, entity_type, entity_id)
+  select new.organization_id, p.id, 'document_received', 'Nouveau document reçu',
+         new.name, 'document', new.id
+  from public.profiles p
+  where p.organization_id = new.organization_id
+    and p.role in ('owner','staff')
+    and p.id <> new.uploaded_by;
+  return new;
+end;
+$$;
+
+drop trigger if exists document_received_notification on public.documents;
+create trigger document_received_notification
+after insert on public.documents
+for each row execute procedure public.notify_document_received();
+
+create or replace function public.notify_message_created()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if exists (select 1 from public.profiles p where p.id = new.sender_id and p.role = 'client') then
+    insert into public.notifications(organization_id, recipient_id, type, title, body, entity_type, entity_id)
+    select new.organization_id, p.id, 'message', 'Nouveau message client',
+           left(new.body, 140), 'client', new.client_id
+    from public.profiles p
+    where p.organization_id = new.organization_id
+      and p.role in ('owner','staff');
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists message_notification on public.messages;
+create trigger message_notification
+after insert on public.messages
+for each row execute procedure public.notify_message_created();
