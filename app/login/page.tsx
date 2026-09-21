@@ -69,6 +69,7 @@ export default function LoginPage() {
         <button className="auth-switch" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setNotice('') }}>
           {mode === 'login' ? 'Nouveau cabinet ? Créer un compte' : 'Déjà inscrit ? Se connecter'}
         </button>
+        {mode === 'login' && <a className="demo-link" href="/demo">Tester Fido sans compte →</a>}
       </section>
     </main>
   )
