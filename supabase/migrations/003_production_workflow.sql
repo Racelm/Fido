@@ -109,8 +109,8 @@ create policy "Fido document read access" on storage.objects for select
 using (
   bucket_id = 'documents'
   and (
-    public.is_org_member((storage.foldername(name))[1]::uuid)
-    or public.is_client_user((storage.foldername(name))[2]::uuid)
+    public.is_org_member(public.safe_uuid((storage.foldername(name))[1]))
+    or public.is_client_user(public.safe_uuid((storage.foldername(name))[2]))
   )
 );
 
