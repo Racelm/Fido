@@ -28,6 +28,17 @@ create policy "users can update own notifications" on public.notifications for u
 using (recipient_id = auth.uid())
 with check (recipient_id = auth.uid());
 
+create or replace function public.safe_uuid(value text)
+returns uuid
+language plpgsql immutable
+as $
+begin
+  return value::uuid;
+exception when others then
+  return null;
+end;
+$;
+
 create or replace function public.notify_request_created()
 returns trigger
 language plpgsql
