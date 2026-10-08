@@ -5,9 +5,8 @@ import { deadlineReminderTemplate, sendEmail } from '@/lib/email'
 /**
  * Cron : rappels J-7 des échéances fiscales.
  *
- * Vercel Cron poste sur cette route selon `vercel.json` (recommandé : 08:00 UTC).
- * Authentifié via `CRON_SECRET` (Bearer) — Vercel injecte automatiquement
- * l'en-tête `Authorization: Bearer <CRON_SECRET>` si la variable existe.
+ * Cette route est prévue pour être appelée par un cron externe/Hostinger.
+ * Authentification via `CRON_SECRET` (Bearer).
  *
  * Sécurité :
  *   - Utilise SUPABASE_SERVICE_ROLE_KEY (jamais exposée au client).
@@ -51,12 +50,12 @@ export async function GET(req: NextRequest) {
   if (!url || !serviceKey) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 })
   }
-  if (!process.env.EMERGENT_EMAIL_KEY) {
-    return NextResponse.json({ error: 'EMERGENT_EMAIL_KEY not configured' }, { status: 500 })
+  if (!process.env.RESEND_API_KEY && !process.env.EMERGENT_EMAIL_KEY) {
+    return NextResponse.json({ error: 'No email provider configured' }, { status: 500 })
   }
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
-  const appUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://tiwizi.raeldata.com'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://fido.local'
   const appName = process.env.EMAIL_FROM_NAME || 'Tiwizi'
 
   // Fenêtre : les échéances dues dans exactement 7 jours (aujourd'hui + 7)
