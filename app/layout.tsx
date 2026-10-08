@@ -13,7 +13,8 @@ export const metadata: Metadata = {
   title: 'Tiwizi — Espace cabinet & clients',
   description: 'La plateforme simple pour collaborer avec vos clients.',
   applicationName: 'Tiwizi',
-  openGraph: { title: 'Tiwizi — Espace cabinet & clients', description: 'La plateforme simple pour collaborer avec vos clients.', siteName: 'Tiwizi', url: 'https://tiwizi.raeldata.com' },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://tiwizi.raeldata.com'),
+  openGraph: { title: 'Tiwizi — Espace cabinet & clients', description: 'La plateforme simple pour collaborer avec vos clients.', siteName: 'Tiwizi', url: process.env.NEXT_PUBLIC_SITE_URL || 'https://tiwizi.raeldata.com' },
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
