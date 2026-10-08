@@ -2,13 +2,11 @@ import type { NextConfig } from 'next'
 import path from 'node:path'
 
 const nextConfig: NextConfig = {
-  // Dieser Monorepo-Setup hat sowohl /app/yarn.lock als auch /app/fido/pnpm-lock.yaml.
-  // Ohne outputFileTracingRoot wählt Next.js den /app/-Root und tracked die falschen
-  // Dateien — bricht potentiell den Build auf Hostinger.
+  // Le projet Tiwizi est déployé depuis la racine du dépôt sur Hostinger.
+  // Garder le tracing ancré sur cette racine évite de prendre un mauvais workspace parent.
   outputFileTracingRoot: path.join(__dirname),
   eslint: {
-    // Hostinger führt kein `next lint` separat aus (es gibt kein ESLint-Setup),
-    // aber falls jemand `next build` lokal mit --strict baut, nicht blockieren.
+    // Le build de production ne doit pas être bloqué par une configuration ESLint absente.
     ignoreDuringBuilds: true,
   },
 }
