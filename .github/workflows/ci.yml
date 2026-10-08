@@ -1,4 +1,4 @@
-name: Fido CI
+name: Tiwizi CI
 
 on:
   push:

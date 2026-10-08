@@ -1,36 +1,56 @@
-# Fido
+# Tiwizi
 
-Fido est une plateforme SaaS de collaboration entre fiduciaires / cabinets comptables et leurs clients.
+Plateforme SaaS de collaboration entre fiduciaires, experts-comptables et leurs clients au Maroc.
 
-## MVP – Phase 1
+## Stack
 
-- Tableau de bord cabinet
-- Gestion des clients
-- Espace client
-- Messages
-- Documents
-- Demandes de documents
-- Interface responsive en français
+- Next.js 15 (App Router) + TypeScript + React 19
+- Supabase (Auth, Postgres, Storage)
+- E-mails transactionnels via Resend (production) ou proxy Emergent
 
-## Stack prévue
+## Déploiement sur Hostinger
 
-- Next.js + TypeScript
-- React
-- Supabase (Auth, PostgreSQL, Storage)
-- Hébergement Hostinger
+Application Node.js Next.js déployée depuis GitHub sur la branche `main`.
 
-## Démarrage local
+- **Build** : `pnpm build` (ou `npm run build`)
+- **Start** : `pnpm start` (ou `npm start`)
+- **Node.js** : 20+
+- **URL de production** : `https://tiwizi.raeldata.com`
 
-1. Créez un projet Supabase et renseignez `NEXT_PUBLIC_SUPABASE_URL` et
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` dans `.env.local`.
-2. Exécutez `supabase/schema.sql`, puis les migrations de
-   `supabase/migrations/` dans l'éditeur SQL Supabase. La migration Phase 1
-   crée automatiquement l'organisation et le profil `owner` à l'inscription.
-3. Activez la confirmation e-mail dans Supabase Auth selon votre politique.
+Variables d'environnement à configurer dans Hostinger :
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SITE_URL`, `CRON_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM_NAME`, `EMAIL_FROM_ADDRESS`, `EMAIL_REPLY_TO` et, si le proxy historique est utilisé, `EMERGENT_EMAIL_KEY`.
+
+Dans Supabase Auth, configurer l'URL du site sur `https://tiwizi.raeldata.com` et les Redirect URLs nécessaires sous ce domaine, par exemple `https://tiwizi.raeldata.com/**`.
+
+## Développement local
 
 ```bash
-npm install
-npm run dev
+pnpm install
+cp .env.example .env.local
+pnpm dev
 ```
 
-Puis ouvrir http://localhost:3000.
+Puis : `http://localhost:3000`.
+
+## Fonctionnalités
+
+- Inscription du cabinet et invitations clients par lien sécurisé
+- Authentification Supabase SSR
+- Tableau de bord cabinet et espace client
+- Demandes documentaires avec catégories et échéances
+- Upload sécurisé et versionnement des documents
+- Messagerie multi-tenant avec RLS
+- Journal d'audit
+- Échéances fiscales marocaines et rappels
+- Gestion des collaborateurs et invitations
+
+## Structure
+
+```
+app/          → routes et fonctionnalités Next.js
+components/   → interface partagée
+lib/          → Supabase, e-mails, notifications et sécurité
+supabase/     → schéma et migrations
+scripts/      → outils de développement
+docs/         → documentation
+```
