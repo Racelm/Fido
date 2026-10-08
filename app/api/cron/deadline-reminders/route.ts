@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
   }
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://fido.local'
+  const appUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://tiwizi.raeldata.com'
   const appName = process.env.EMAIL_FROM_NAME || 'Tiwizi'
 
   // Fenêtre : les échéances dues dans exactement 7 jours (aujourd'hui + 7)

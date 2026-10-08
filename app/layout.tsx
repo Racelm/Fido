@@ -12,6 +12,8 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: 'Tiwizi — Espace cabinet & clients',
   description: 'La plateforme simple pour collaborer avec vos clients.',
+  applicationName: 'Tiwizi',
+  openGraph: { title: 'Tiwizi — Espace cabinet & clients', description: 'La plateforme simple pour collaborer avec vos clients.', siteName: 'Tiwizi', url: 'https://tiwizi.raeldata.com' },
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
