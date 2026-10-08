@@ -31,13 +31,13 @@ with check (recipient_id = auth.uid());
 create or replace function public.safe_uuid(value text)
 returns uuid
 language plpgsql immutable
-as $
+as $$
 begin
   return value::uuid;
 exception when others then
   return null;
 end;
-$;
+$$;
 
 create or replace function public.notify_request_created()
 returns trigger
@@ -117,13 +117,13 @@ using (
 create or replace function public.safe_uuid(value text)
 returns uuid
 language plpgsql immutable
-as $
+as $$
 begin
   return value::uuid;
 exception when others then
   return null;
 end;
-$;
+$$;
 
 create index if not exists documents_request_idx on public.documents(request_id, created_at desc);
 create index if not exists requests_org_status_idx on public.document_requests(organization_id, status, due_date);
