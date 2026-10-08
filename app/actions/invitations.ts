@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { inviteEmailTemplate, sendEmail } from '@/lib/email'
 
 function appUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://tiwizi.raeldata.com'
+  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 }
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
