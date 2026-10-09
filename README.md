@@ -22,6 +22,13 @@ Variables d'environnement à configurer dans Hostinger :
 
 Dans Supabase Auth, configurer l'URL du site sur `https://tiwizi.raeldata.com` et les Redirect URLs nécessaires sous ce domaine, par exemple `https://tiwizi.raeldata.com/**`.
 
+## Auth-Konfiguration
+
+- **Supabase Auth → URL Configuration → Site URL**: auf die produktive Basis-URL setzen, z. B. den in Hostinger verwendeten Wert von `NEXT_PUBLIC_SITE_URL` (aktuell `https://preview-k7x2.raeldata.com`).
+- **Redirect URLs**: `https://<produktiv-adresse>/**` und `http://localhost:3000/**` eintragen. Ersetze `<produktiv-adresse>` durch die tatsächliche Hostinger-Domain.
+- **Hostinger**: `NEXT_PUBLIC_SITE_URL` muss exakt die öffentliche Basis-URL der bereitgestellten App enthalten, ohne abschließenden Schrägstrich.
+- **Wichtig**: `NEXT_PUBLIC_*`-Variablen werden beim Build eingebaut. Nach einer Änderung muss die Anwendung neu gebaut und neu deployed werden.
+
 ## Développement local
 
 ```bash
