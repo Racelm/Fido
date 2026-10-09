@@ -24,6 +24,8 @@ Dans Supabase Auth, configurer la Site URL et les Redirect URLs selon la section
 
 ## Auth-Konfiguration
 
+Die folgenden Werte gelten für die jeweilige Bereitstellung; die konkrete Domain wird ausschließlich über die Umgebung konfiguriert.
+
 - **Supabase Auth → URL Configuration → Site URL**: auf die produktive Basis-URL setzen, den in Hostinger verwendeten Wert von `NEXT_PUBLIC_SITE_URL`. Keine lokale oder Preview-Domain fest eintragen.
 - **Redirect URLs**: `https://<produktiv-adresse>/**` und `http://localhost:3000/**` eintragen. Ersetze den Platzhalter durch die tatsächliche Hostinger-Domain; diese Domain bleibt konfigurierbar und ist nicht fest im Code hinterlegt.
 - **Hostinger**: `NEXT_PUBLIC_SITE_URL` muss exakt die öffentliche Basis-URL der bereitgestellten App enthalten, ohne abschließenden Schrägstrich.
