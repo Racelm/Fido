@@ -3,6 +3,7 @@
 import { FormEvent, use, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { acceptStaffInvitation } from '@/app/actions/invite-staff'
+import { getSiteUrl } from '@/lib/site-url'
 
 export default function InviteStaffPage({
   params,
@@ -26,7 +27,10 @@ export default function InviteStaffPage({
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } },
+      options: {
+        emailRedirectTo: `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(`/invite-staff/${token}`)}`,
+        data: { full_name: name },
+      },
     })
     if (signUpError) {
       setError(signUpError.message)

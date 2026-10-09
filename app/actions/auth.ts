@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { getSiteUrl } from '@/lib/site-url'
 import { createClient } from '@/lib/supabase/server'
 
 export async function signIn(formData: FormData) {
@@ -15,7 +16,6 @@ export async function signIn(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) return { error: 'Identifiants invalides.' }
 
-  // Détermine la cible en fonction du rôle
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -25,7 +25,8 @@ export async function signIn(formData: FormData) {
     .eq('id', user?.id ?? '')
     .maybeSingle()
   revalidatePath('/', 'layout')
-  const target = redirectTo || (profile?.role === 'client' ? '/client' : '/')
+  const safeRedirect = redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : ''
+  const target = safeRedirect || (profile?.role === 'client' ? '/client' : '/')
   redirect(target)
 }
 
@@ -45,6 +46,7 @@ export async function signUpCabinet(formData: FormData) {
     email,
     password,
     options: {
+      emailRedirectTo: `${getSiteUrl()}/auth/callback`,
       data: { cabinet_name: cabinetName, full_name: fullName },
     },
   })

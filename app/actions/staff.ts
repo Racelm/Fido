@@ -4,9 +4,10 @@ import { createHash, randomBytes } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, staffInviteTemplate } from '@/lib/email'
+import { getSiteUrl } from '@/lib/site-url'
 
 function appUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  return getSiteUrl()
 }
 
 export async function inviteStaff(formData: FormData) {
