@@ -3,6 +3,7 @@
 import { FormEvent, use, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { acceptInvitation } from '@/app/actions/invite'
+import { getSiteUrl } from '@/lib/site-url'
 
 type Mode = 'checking' | 'needs-password' | 'authed-set-password' | 'done'
 
@@ -45,7 +46,10 @@ export default function InvitePage({
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } },
+      options: {
+        emailRedirectTo: `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(`/invite/${token}`)}`,
+        data: { full_name: name },
+      },
     })
     if (signUpError) {
       setError(signUpError.message)
