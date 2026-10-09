@@ -34,6 +34,9 @@ export default async function LoginPage({
         <p className="auth-copy">
           Accédez à votre espace sécurisé pour collaborer avec vos clients.
         </p>
+        {params.error && (
+          <p className="auth-error" role="alert">{params.error}</p>
+        )}
         <LoginForm redirect={params.redirect || ''} />
         <p className="auth-copy" style={{ marginTop: 18 }}>
           Vous n’avez pas encore de cabinet ?{' '}
