@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const safeNext = next.startsWith('/') && !next.startsWith('//') && !next.includes('\\\\') ? next : '/'
+  const safeNext = next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') ? next : '/'
   const destination = new URL(safeNext, origin)
   if (destination.origin !== origin) return NextResponse.redirect(new URL('/', origin))
   return NextResponse.redirect(destination)
