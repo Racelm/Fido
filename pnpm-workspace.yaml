@@ -1,2 +1,8 @@
+# Paket-Build-Skripte, die pnpm ausführen darf.
+# sharp (Bildoptimierung von Next.js) braucht sein Install-Skript.
 allowBuilds:
-  sharp: set this to true or false
+  sharp: true
+
+# Gleiche Freigabe für pnpm 10 (ältere Einstellung).
+onlyBuiltDependencies:
+  - sharp
