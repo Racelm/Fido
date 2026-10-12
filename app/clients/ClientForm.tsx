@@ -6,7 +6,7 @@ import { createClientRecord } from '@/app/actions/clients'
 type Invitation = {
   inviteUrl: string
   emailSent: boolean
-  emailVia?: 'emergent' | 'supabase' | 'none'
+  emailVia?: 'smtp' | 'resend' | 'emergent' | 'supabase' | 'none'
   emailError?: string
 }
 
@@ -139,15 +139,22 @@ export default function ClientForm() {
                 Un e-mail d’invitation vient d’être envoyé
                 {state.invitation.emailVia === 'supabase'
                   ? ' (via Supabase).'
-                  : ' (via Resend).'}{' '}
+                  : '.'}{' '}
                 Le client reçoit un lien d’activation.
               </span>
             ) : (
               <div style={{ display: 'grid', gap: 8 }}>
                 <span>
-                  L’envoi d’e-mail n’est pas configuré sur cette instance. Partagez le lien
-                  d’invitation ci-dessous avec votre client&nbsp;:
+                  {state.invitation.emailVia && state.invitation.emailVia !== 'none'
+                    ? 'L’e-mail d’invitation n’a pas pu être envoyé.'
+                    : 'L’envoi d’e-mail n’est pas configuré sur cette instance.'}{' '}
+                  Partagez le lien d’invitation ci-dessous avec votre client&nbsp;:
                 </span>
+                {state.invitation.emailError && (
+                  <span className="muted" style={{ fontSize: 12 }} data-testid="client-email-error">
+                    Détail : {state.invitation.emailError}
+                  </span>
+                )}
                 <input
                   className="search auth-input"
                   readOnly

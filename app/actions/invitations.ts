@@ -5,7 +5,7 @@ import { firstRel } from '@/lib/rel'
 import { createHash, randomBytes } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { inviteEmailTemplate, sendEmail } from '@/lib/email'
+import { emailConfigDiagnostic, emailProvider, inviteEmailTemplate, sendEmail } from '@/lib/email'
 
 function appUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -13,9 +13,12 @@ function appUrl(): string {
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 
+export type InviteEmailVia = 'smtp' | 'resend' | 'emergent' | 'supabase' | 'none'
+
 /**
  * Essaie d'envoyer l'e-mail d'invitation via le canal le plus simple disponible :
- *   1. Si EMERGENT_EMAIL_KEY est configurée → envoi via Resend proxy Emergent (template custom)
+ *   1. Si SMTP_* (ou RESEND_API_KEY / EMERGENT_EMAIL_KEY) est configurée → envoi via
+ *      sendEmail avec notre template HTML
  *   2. Sinon si SUPABASE_SERVICE_ROLE_KEY est configurée → envoi via Supabase Auth
  *      natif (inviteUserByEmail), gratuit, inclus avec Supabase, template dans
  *      le dashboard Supabase
@@ -27,11 +30,12 @@ async function sendInvitationEmail(params: {
   clientCompany: string
   inviteUrl: string
   nextRedirect: string // route finale après vérification Supabase (notre /invite/[token])
-}): Promise<{ sent: boolean; via: 'emergent' | 'supabase' | 'none'; error?: string }> {
+}): Promise<{ sent: boolean; via: InviteEmailVia; error?: string }> {
   const appName = process.env.EMAIL_FROM_NAME || 'Tiwizi'
 
-  // 1. Emergent proxy (template custom, HTML riche)
-  if (process.env.EMERGENT_EMAIL_KEY) {
+  // 1. Resend direct ou proxy Emergent (template custom, HTML riche)
+  const provider = emailProvider()
+  if (provider !== 'none') {
     try {
       const { subject, html } = inviteEmailTemplate({
         cabinetName: params.cabinetName,
@@ -40,11 +44,11 @@ async function sendInvitationEmail(params: {
         appName,
       })
       await sendEmail({ to: params.email, subject, html })
-      return { sent: true, via: 'emergent' }
+      return { sent: true, via: provider }
     } catch (err) {
       return {
         sent: false,
-        via: 'emergent',
+        via: provider,
         error: err instanceof Error ? err.message : String(err),
       }
     }
@@ -78,7 +82,7 @@ async function sendInvitationEmail(params: {
     }
   }
 
-  return { sent: false, via: 'none' }
+  return { sent: false, via: 'none', error: emailConfigDiagnostic() }
 }
 
 export async function createInvitationInternal(
@@ -94,7 +98,7 @@ export async function createInvitationInternal(
   token: string
   inviteUrl: string
   emailSent: boolean
-  emailVia: 'emergent' | 'supabase' | 'none'
+  emailVia: InviteEmailVia
   emailError?: string
   error?: string
 }> {
