@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isPlatformAdmin } from '@/lib/platform-admin'
 
 // Routes accessibles sans authentification.
 const PUBLIC_PATHS = ['/login', '/signup', '/invite', '/invite-staff', '/auth', '/_next', '/favicon.ico']
@@ -45,6 +46,31 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  const admin = isPlatformAdmin(user?.email)
+
+  // Espace d'administration : réservé aux administrateurs de la plateforme
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    if (!admin) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+    return response
+  }
+
+  // Cabinet non validé (contrat pas encore signé) ou suspendu => écran d'attente.
+  // En cas d'erreur (migration 012 pas encore appliquée), on ne bloque pas.
+  if (user && !admin && !isPublic(pathname) && pathname !== '/pending' && pathname !== '/no-access') {
+    const { data: status, error } = await supabase.rpc('my_access_status')
+    if (!error && (status === 'pending' || status === 'suspended')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/pending'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+  }
+
   // Utilisateur authentifié qui atterrit sur /login ou / => on redirige vers son espace
   if (user && (pathname === '/login' || pathname === '/signup')) {
     const { data: profile } = await supabase
@@ -53,7 +79,13 @@ export async function updateSession(request: NextRequest) {
       .eq('id', user.id)
       .maybeSingle()
     const url = request.nextUrl.clone()
-    url.pathname = !profile ? '/no-access' : profile.role === 'client' ? '/client' : '/'
+    url.pathname = !profile
+      ? admin
+        ? '/admin'
+        : '/no-access'
+      : profile.role === 'client'
+        ? '/client'
+        : '/'
     url.searchParams.delete('redirect')
     return NextResponse.redirect(url)
   }

@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { safeInternalPath } from '@/lib/site-url'
+import { platformAdminEmails } from '@/lib/platform-admin'
+import { newCabinetSignupTemplate, sendEmailSafe } from '@/lib/email'
 
 export async function signIn(formData: FormData) {
   const email = String(formData.get('email') || '').trim().toLowerCase()
@@ -47,9 +49,29 @@ export async function signUpCabinet(formData: FormData) {
     password,
     options: {
       data: { cabinet_name: cabinetName, full_name: fullName },
+      // Après confirmation de l'e-mail : écran « en attente de validation »
+      emailRedirectTo: process.env.NEXT_PUBLIC_APP_URL
+        ? `${process.env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '')}/auth/callback?next=/pending`
+        : undefined,
     },
   })
   if (error) return { error: error.message }
+
+  // Prévenir les administrateurs de la plateforme (best-effort)
+  const admins = platformAdminEmails()
+  if (admins.length) {
+    const base = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/+$/, '')
+    if (base.startsWith('https://')) {
+      const tpl = newCabinetSignupTemplate({
+        cabinetName,
+        ownerName: fullName,
+        ownerEmail: email,
+        adminUrl: `${base}/admin?status=pending`,
+        appName: process.env.EMAIL_FROM_NAME || 'Tiwizi',
+      })
+      await Promise.all(admins.map((to) => sendEmailSafe({ to, ...tpl })))
+    }
+  }
   return { success: true }
 }
 

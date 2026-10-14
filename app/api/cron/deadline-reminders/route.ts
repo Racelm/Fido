@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { deadlineReminderTemplate, sendEmail } from '@/lib/email'
+import { deadlineReminderTemplate, emailProvider, sendEmail } from '@/lib/email'
 
 /**
  * Cron : rappels J-7 des échéances fiscales.
@@ -50,12 +50,12 @@ export async function GET(req: NextRequest) {
   if (!url || !serviceKey) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 })
   }
-  if (!process.env.RESEND_API_KEY && !process.env.EMERGENT_EMAIL_KEY) {
+  if (emailProvider() === 'none') {
     return NextResponse.json({ error: 'No email provider configured' }, { status: 500 })
   }
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://fido.local'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://raeldata.com'
   const appName = process.env.EMAIL_FROM_NAME || 'Tiwizi'
 
   // Fenêtre : les échéances dues dans exactement 7 jours (aujourd'hui + 7)
@@ -70,6 +70,8 @@ export async function GET(req: NextRequest) {
       'id, organization_id, client_id, obligation, period_label, due_date, reminded_at, clients!inner(company_name, contact_name, email), organizations!inner(name)'
     )
     .eq('status', 'pending')
+    // Uniquement les cabinets actifs (pas les cabinets en attente ou suspendus)
+    .eq('organizations.status', 'active')
     .eq('due_date', targetIso)
     .is('reminded_at', null)
 

@@ -3,7 +3,7 @@
 import { firstRel } from '@/lib/rel'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { documentReceivedTemplate, documentRejectedTemplate, sendEmail } from '@/lib/email'
+import { documentReceivedTemplate, documentRejectedTemplate, emailProvider, sendEmail } from '@/lib/email'
 import { getClientEmail, sendToMany } from '@/lib/notify'
 
 const MAX_SIZE = 25 * 1024 * 1024 // 25 MB
@@ -87,7 +87,7 @@ export async function validateUploadServerSide(
 
 export async function notifyStaffOfDocument(documentId: string) {
   // Utilisé après un upload client — best-effort, non bloquant.
-  if (!process.env.EMERGENT_EMAIL_KEY) return { success: false }
+  if (emailProvider() === 'none') return { success: false }
   const supabase = await createClient()
   const { data: doc } = await supabase
     .from('documents')

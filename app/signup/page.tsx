@@ -19,8 +19,8 @@ export default async function SignupPage() {
         <p className="eyebrow">Nouveau cabinet</p>
         <h1>Créer votre cabinet</h1>
         <p className="auth-copy">
-          Créez votre espace fiduciaire en quelques secondes. Votre cabinet et votre compte
-          propriétaire seront initialisés automatiquement.
+          Demandez l’ouverture de votre espace fiduciaire. Après validation de votre contrat
+          par notre équipe, votre cabinet sera activé et vous pourrez inviter vos clients.
         </p>
         <SignupForm />
         <p className="auth-copy" style={{ marginTop: 18 }}>

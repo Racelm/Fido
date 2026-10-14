@@ -595,3 +595,51 @@ export function documentRejectedTemplate(params: {
     ),
   }
 }
+
+/** Administrateur plateforme : un nouveau cabinet demande l'ouverture d'un espace. */
+export function newCabinetSignupTemplate(params: {
+  cabinetName: string
+  ownerName: string
+  ownerEmail: string
+  adminUrl: string // https
+  appName: string
+}): { subject: string; html: string } {
+  const subject = `Nouveau cabinet à valider : ${params.cabinetName}`
+  const body = `
+    <p>Une nouvelle demande d’ouverture de cabinet a été enregistrée :</p>
+    <ul>
+      <li>Cabinet : <strong>${escapeHtml(params.cabinetName)}</strong></li>
+      <li>Responsable : ${escapeHtml(params.ownerName || '—')}</li>
+      <li>E-mail : ${escapeHtml(params.ownerEmail)}</li>
+    </ul>
+    <p>Le cabinet reste bloqué jusqu’à votre validation.</p>
+    <p style="text-align:center;margin:24px 0">
+      <a href="${params.adminUrl}" style="display:inline-block;padding:12px 20px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:600">Ouvrir l’administration</a>
+    </p>
+  `
+  return {
+    subject,
+    html: baseLayout(body, params.appName, `Notification interne ${params.appName} — administration de la plateforme.`),
+  }
+}
+
+/** Propriétaire du cabinet : son espace vient d'être activé. */
+export function cabinetActivatedTemplate(params: {
+  cabinetName: string
+  loginUrl: string // https
+  appName: string
+}): { subject: string; html: string } {
+  const subject = `Votre espace ${params.appName} est activé`
+  const body = `
+    <p>Bonjour,</p>
+    <p>Bonne nouvelle : l’espace du cabinet <strong>${escapeHtml(params.cabinetName)}</strong> est désormais <strong>actif</strong>.</p>
+    <p>Vous pouvez vous connecter, ajouter vos clients et leur envoyer une invitation.</p>
+    <p style="text-align:center;margin:24px 0">
+      <a href="${params.loginUrl}" style="display:inline-block;padding:12px 20px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:600">Se connecter</a>
+    </p>
+  `
+  return {
+    subject,
+    html: baseLayout(body, params.appName, `${params.appName} — nous ne vous demanderons jamais votre mot de passe par e-mail.`),
+  }
+}

@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { signOut } from '@/app/actions/auth'
+import { createClient } from '@/lib/supabase/server'
+import { isPlatformAdmin } from '@/lib/platform-admin'
 
 export type NavItem = {
   href: string
@@ -22,7 +24,14 @@ type Props = {
  * Barre latérale "Workspace OS" façon Tiwizi.
  * Server component (reçoit `profile` + nav items du parent).
  */
-export default function Sidebar({ active, profile, items }: Props) {
+export default async function Sidebar({ active, profile, items }: Props) {
+  // Lien vers l'administration de la plateforme, visible uniquement des super-admins
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const showAdmin = isPlatformAdmin(user?.email)
+
   const initials = (profile.full_name || 'T').slice(0, 2).toUpperCase()
   const roleLabel = profile.role === 'owner' ? 'Propriétaire' : profile.role === 'staff' ? 'Collaborateur' : 'Client'
 
@@ -54,6 +63,12 @@ export default function Sidebar({ active, profile, items }: Props) {
             )}
           </Link>
         ))}
+        {showAdmin && (
+          <Link href="/admin" data-testid="nav-admin">
+            <span className="nav-icon" aria-hidden>⚙</span>
+            <span>Administration</span>
+          </Link>
+        )}
       </nav>
 
       <div className="sidebar-promo">

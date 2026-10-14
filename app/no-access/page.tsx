@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/app/actions/auth'
+import { isPlatformAdmin } from '@/lib/platform-admin'
 import {
   claimPendingInvitation,
   findPendingInvitationForCurrentUser,
@@ -22,6 +23,7 @@ export default async function NoAccessPage({
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+  if (isPlatformAdmin(user.email)) redirect('/admin')
 
   const { data: profile } = await supabase
     .from('profiles')

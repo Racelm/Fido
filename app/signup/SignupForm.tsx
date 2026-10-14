@@ -54,11 +54,13 @@ export default function SignupForm() {
       )}
       {state.success && (
         <p className="auth-notice" data-testid="signup-success">
-          Cabinet créé. Vérifiez votre e-mail si la confirmation est activée, puis connectez-vous.
+          Demande enregistrée ! Confirmez votre adresse e-mail via le lien reçu. Votre espace
+          sera activé par notre équipe après validation de votre contrat — nous vous
+          contacterons très prochainement.
         </p>
       )}
       <button className="primary auth-submit" disabled={pending} data-testid="signup-submit">
-        {pending ? 'Création...' : 'Créer mon cabinet'}
+        {pending ? 'Envoi...' : 'Demander l’ouverture de mon cabinet'}
       </button>
     </form>
   )
