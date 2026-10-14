@@ -1,9 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { adminDb, requireAdmin } from '@/lib/admin'
+import { adminDb, requireAdmin, requireRootAdmin } from '@/lib/admin'
 import { cabinetActivatedTemplate, sendEmailSafe } from '@/lib/email'
 import { isPlatformAdmin } from '@/lib/platform-admin'
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type Result = { ok?: boolean; error?: string }
 
@@ -153,6 +155,8 @@ export async function setUserBlocked(formData: FormData): Promise<Result> {
   const { data: target } = await db.auth.admin.getUserById(userId)
   if (!target?.user) return { error: 'Utilisateur introuvable.' }
   if (isPlatformAdmin(target.user.email)) return { error: 'Impossible de bloquer un administrateur.' }
+  const { data: adminRow } = await db.from('platform_admins').select('user_id').eq('user_id', userId).maybeSingle()
+  if (adminRow) return { error: 'Retirez d’abord ses droits d’administrateur.' }
 
   const { error } = await db.auth.admin.updateUserById(userId, {
     ban_duration: blocked ? '876000h' : 'none',
@@ -171,5 +175,51 @@ export async function setUserBlocked(formData: FormData): Promise<Result> {
   }
   revalidatePath('/admin/users')
   if (profile?.organization_id) revalidatePath(`/admin/cabinets/${profile.organization_id}`)
+  return { ok: true }
+}
+
+/**
+ * Ajoute un administrateur de la plateforme.
+ * Réservé aux propriétaires (PLATFORM_ADMIN_EMAILS). Le compte doit déjà
+ * exister et avoir confirmé son adresse e-mail.
+ */
+export async function addPlatformAdmin(formData: FormData): Promise<Result> {
+  const root = await requireRootAdmin()
+  const email = String(formData.get('email') || '').trim().toLowerCase()
+  if (!EMAIL.test(email)) return { error: 'Adresse e-mail invalide.' }
+  if (isPlatformAdmin(email)) return { error: 'Cette adresse est déjà propriétaire de la plateforme.' }
+
+  const db = adminDb()
+  // Recherche du compte (pagination Supabase Auth)
+  let target: { id: string; email?: string; email_confirmed_at?: string | null } | undefined
+  for (let page = 1; page <= 10 && !target; page++) {
+    const { data, error } = await db.auth.admin.listUsers({ page, perPage: 1000 })
+    if (error) return { error: error.message }
+    target = data.users.find((u) => (u.email || '').toLowerCase() === email)
+    if (data.users.length < 1000) break
+  }
+  if (!target) {
+    return { error: 'Aucun compte avec cette adresse. La personne doit d’abord créer un compte et confirmer son e-mail.' }
+  }
+  if (!target.email_confirmed_at) {
+    return { error: 'Ce compte n’a pas encore confirmé son adresse e-mail.' }
+  }
+
+  const { error } = await db
+    .from('platform_admins')
+    .upsert({ user_id: target.id, email, added_by: root.email || '' }, { onConflict: 'user_id' })
+  if (error) return { error: error.message }
+  revalidatePath('/admin/admins')
+  return { ok: true }
+}
+
+/** Retire les droits d'un administrateur ajouté. Réservé aux propriétaires. */
+export async function removePlatformAdmin(formData: FormData): Promise<Result> {
+  await requireRootAdmin()
+  const userId = String(formData.get('user_id') || '')
+  if (!UUID.test(userId)) return { error: 'Administrateur invalide.' }
+  const { error } = await adminDb().from('platform_admins').delete().eq('user_id', userId)
+  if (error) return { error: error.message }
+  revalidatePath('/admin/admins')
   return { ok: true }
 }

@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import LoginForm from './LoginForm'
 import { createClient } from '@/lib/supabase/server'
-import { isPlatformAdmin } from '@/lib/platform-admin'
+import { isAdminUser } from '@/lib/admin'
 
 const LOGIN_MESSAGES: Record<string, string> = {
   'email-confirmed':
@@ -27,7 +27,7 @@ export default async function LoginPage({
       .select('role')
       .eq('id', user.id)
       .maybeSingle()
-    if (!profile) redirect(isPlatformAdmin(user.email) ? '/admin' : '/no-access')
+    if (!profile) redirect((await isAdminUser(user, supabase)) ? '/admin' : '/no-access')
     redirect(profile.role === 'client' ? '/client' : '/')
   }
 

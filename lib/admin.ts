@@ -1,19 +1,45 @@
 import { redirect } from 'next/navigation'
 import { createClient as createAdminClient, type User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
-import { isPlatformAdmin } from '@/lib/platform-admin'
+import { isPlatformAdmin as isPlatformAdminEmail, isRootAdmin } from '@/lib/platform-admin'
+
+type SessionClient = Awaited<ReturnType<typeof createClient>>
 
 /**
- * Vérifie que l'utilisateur connecté est administrateur de la plateforme
- * (PLATFORM_ADMIN_EMAILS). À appeler en tête de CHAQUE page et action admin.
+ * L'utilisateur est-il administrateur ?
+ *  - propriétaire (PLATFORM_ADMIN_EMAILS + e-mail confirmé), ou
+ *  - administrateur ajouté par un propriétaire (table platform_admins).
  */
-export async function requireAdmin(): Promise<User> {
+export async function isAdminUser(
+  user: (User & { email_confirmed_at?: string | null }) | null | undefined,
+  supabase?: SessionClient
+): Promise<boolean> {
+  if (!user) return false
+  if (isRootAdmin(user)) return true
+  if (!user.email_confirmed_at) return false
+  const client = supabase || (await createClient())
+  const { data, error } = await client.rpc('is_platform_admin')
+  return !error && data === true
+}
+
+/**
+ * Vérifie que l'utilisateur connecté est administrateur de la plateforme.
+ * À appeler en tête de CHAQUE page et action admin.
+ */
+export async function requireAdmin(): Promise<User & { isRoot: boolean }> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login?redirect=/admin')
-  if (!isPlatformAdmin(user.email)) redirect('/')
+  if (!(await isAdminUser(user, supabase))) redirect('/')
+  return Object.assign(user, { isRoot: isRootAdmin(user) })
+}
+
+/** Réservé aux propriétaires de la plateforme (gestion des administrateurs). */
+export async function requireRootAdmin(): Promise<User & { isRoot: boolean }> {
+  const user = await requireAdmin()
+  if (!user.isRoot) redirect('/admin')
   return user
 }
 
@@ -57,6 +83,15 @@ export async function listAllAuthUsers(): Promise<AuthUserLite[]> {
     if (data.users.length < perPage) break
   }
   return out
+}
+
+/** Identifiants de tous les administrateurs (propriétaires + ajoutés). */
+export async function adminUserIds(users: AuthUserLite[]): Promise<Set<string>> {
+  const ids = new Set<string>()
+  for (const u of users) if (u.confirmed && isPlatformAdminEmail(u.email)) ids.add(u.id)
+  const { data } = await adminDb().from('platform_admins').select('user_id')
+  for (const r of data || []) ids.add(r.user_id as string)
+  return ids
 }
 
 export function isBanned(u: AuthUserLite): boolean {

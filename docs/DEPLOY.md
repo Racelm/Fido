@@ -127,7 +127,7 @@ Ajoutez pour **Production** et **Preview** :
 | `NEXT_PUBLIC_APP_URL` | `https://fido-staging-xxx.vercel.app` | Après premier deploy, revenir mettre l’URL réelle |
 | `EMERGENT_EMAIL_KEY` | `ek_...` | Fourni par Emergent · **Sensitive** |
 | `EMAIL_FROM_NAME` | `Tiwizi` |  |
-| `PLATFORM_ADMIN_EMAILS` | `vous@exemple.com` | Super-admins (séparés par des virgules) : accès à /admin, validation des cabinets |
+| `PLATFORM_ADMIN_EMAILS` | `vous@exemple.com` | Propriétaire(s) de la plateforme (séparés par des virgules, e-mail confirmé requis). Seuls eux peuvent nommer d’autres administrateurs dans /admin/admins |
 | `PLATFORM_CONTACT_EMAIL` | `contact@raeldata.com` | Optionnel : contact affiché aux cabinets en attente / suspendus |
 | `EMAIL_REPLY_TO` | `contact@votre-cabinet.ma` | optionnel |
 | `CRON_SECRET` | (chaîne aléatoire 32+ car) | Générez avec `openssl rand -hex 32` · **Sensitive** |

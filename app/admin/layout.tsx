@@ -25,7 +25,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           Administration
         </p>
         <nav className="nav">
-          {NAV.map((it) => (
+          {[
+            ...NAV,
+            ...(admin.isRoot ? [{ href: '/admin/admins', label: 'Administrateurs', icon: '★' }] : []),
+          ].map((it) => (
             <Link key={it.href} href={it.href}>
               <span className="nav-icon" aria-hidden>
                 {it.icon}
@@ -43,7 +46,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="sidebar-user">
           <div className="sidebar-user-avatar">AD</div>
           <div className="sidebar-user-info">
-            <strong>Super-admin</strong>
+            <strong>{admin.isRoot ? 'Propriétaire' : 'Administrateur'}</strong>
             <span>{admin.email}</span>
           </div>
           <form action={signOut}>

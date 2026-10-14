@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { signOut } from '@/app/actions/auth'
 import { createClient } from '@/lib/supabase/server'
-import { isPlatformAdmin } from '@/lib/platform-admin'
+import { isAdminUser } from '@/lib/admin'
 
 export type NavItem = {
   href: string
@@ -30,7 +30,7 @@ export default async function Sidebar({ active, profile, items }: Props) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  const showAdmin = isPlatformAdmin(user?.email)
+  const showAdmin = await isAdminUser(user, supabase)
 
   const initials = (profile.full_name || 'T').slice(0, 2).toUpperCase()
   const roleLabel = profile.role === 'owner' ? 'Propriétaire' : profile.role === 'staff' ? 'Collaborateur' : 'Client'

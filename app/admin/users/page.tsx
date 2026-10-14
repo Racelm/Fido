@@ -7,8 +7,8 @@ import {
   requireAdmin,
   ROLE_LABELS,
   STATUS_LABELS,
+  adminUserIds,
 } from '@/lib/admin'
-import { isPlatformAdmin } from '@/lib/platform-admin'
 import { setUserBlocked } from '@/app/actions/admin'
 import ActionForm from '@/components/admin/ActionForm'
 
@@ -40,6 +40,7 @@ export default async function AdminUsersPage({
 
   type ProfileRow = { id: string; full_name: string | null; role: string; organization_id: string | null }
   type OrgRow = { id: string; name: string; status: string }
+  const adminIds = await adminUserIds(users)
   const profileById = new Map(((profiles || []) as ProfileRow[]).map((p) => [p.id, p]))
   const orgById = new Map(((orgs || []) as OrgRow[]).map((o) => [o.id, o]))
 
@@ -135,7 +136,7 @@ export default async function AdminUsersPage({
             <tbody>
               {visible.map(({ u, p, org, banned }) => {
                 const orgSt = org ? STATUS_LABELS[org.status as string] : undefined
-                const isAdminAccount = isPlatformAdmin(u.email)
+                const isAdminAccount = adminIds.has(u.id)
                 return (
                   <tr key={u.id}>
                     <td>

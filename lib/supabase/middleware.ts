@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { isPlatformAdmin } from '@/lib/platform-admin'
+import { isRootAdmin } from '@/lib/platform-admin'
 
 // Routes accessibles sans authentification.
 const PUBLIC_PATHS = ['/login', '/signup', '/invite', '/invite-staff', '/auth', '/_next', '/favicon.ico']
@@ -46,11 +46,20 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  const admin = isPlatformAdmin(user?.email)
+  // Statut administrateur, calculé seulement si nécessaire (évite un appel par requête)
+  let adminCache: boolean | undefined
+  const isAdmin = async (): Promise<boolean> => {
+    if (adminCache !== undefined) return adminCache
+    if (!user) return (adminCache = false)
+    if (isRootAdmin(user)) return (adminCache = true)
+    if (!user.email_confirmed_at) return (adminCache = false)
+    const { data, error } = await supabase.rpc('is_platform_admin')
+    return (adminCache = !error && data === true)
+  }
 
   // Espace d'administration : réservé aux administrateurs de la plateforme
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-    if (!admin) {
+    if (!(await isAdmin())) {
       const url = request.nextUrl.clone()
       url.pathname = '/'
       url.search = ''
@@ -61,9 +70,9 @@ export async function updateSession(request: NextRequest) {
 
   // Cabinet non validé (contrat pas encore signé) ou suspendu => écran d'attente.
   // En cas d'erreur (migration 012 pas encore appliquée), on ne bloque pas.
-  if (user && !admin && !isPublic(pathname) && pathname !== '/pending' && pathname !== '/no-access') {
+  if (user && !isPublic(pathname) && pathname !== '/pending' && pathname !== '/no-access') {
     const { data: status, error } = await supabase.rpc('my_access_status')
-    if (!error && (status === 'pending' || status === 'suspended')) {
+    if (!error && (status === 'pending' || status === 'suspended') && !(await isAdmin())) {
       const url = request.nextUrl.clone()
       url.pathname = '/pending'
       url.search = ''
@@ -80,7 +89,7 @@ export async function updateSession(request: NextRequest) {
       .maybeSingle()
     const url = request.nextUrl.clone()
     url.pathname = !profile
-      ? admin
+      ? (await isAdmin())
         ? '/admin'
         : '/no-access'
       : profile.role === 'client'
