@@ -133,10 +133,25 @@ export async function findPendingInvitationForCurrentUser(): Promise<{
 /** Finalise l'invitation en attente de l'utilisateur connecté (e-mail vérifié). */
 export async function claimPendingInvitation(formData: FormData): Promise<void> {
   const name = String(formData.get('name') || '').trim()
+  const password = String(formData.get('password') || '')
+  const confirm = String(formData.get('password_confirm') || '')
+  if (password.length < 8) {
+    redirect(`/no-access?error=${encodeURIComponent('Mot de passe : 8 caractères minimum.')}`)
+  }
+  if (password !== confirm) {
+    redirect(`/no-access?error=${encodeURIComponent('Les deux mots de passe ne correspondent pas.')}`)
+  }
   const pending = await pendingInvitationForCurrentUser()
   if (!pending) redirect('/no-access?error=none')
 
   const supabase = await createClient()
+  // Définit le mot de passe du compte (créé sans mot de passe via une invitation).
+  // « same_password » = déjà défini à l'identique : sans importance.
+  const { error: pwdError } = await supabase.auth.updateUser({ password })
+  if (pwdError && pwdError.code !== 'same_password') {
+    redirect(`/no-access?error=${encodeURIComponent(pwdError.message)}`)
+  }
+
   // La fonction SQL vérifie que l'e-mail du JWT correspond à l'invitation.
   const { error } = await supabase.rpc('claim_client_invitation', {
     invitation_token_hash: pending.tokenHash,

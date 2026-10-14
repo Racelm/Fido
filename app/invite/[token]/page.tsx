@@ -159,7 +159,8 @@ export default function InvitePage({
     // Si l'utilisateur veut (re)définir un mot de passe
     if (password) {
       const { error: pwdErr } = await supabase.auth.updateUser({ password })
-      if (pwdErr) {
+      // « same_password » : mot de passe déjà défini à l'identique, on continue
+      if (pwdErr && pwdErr.code !== 'same_password') {
         setError(pwdErr.message)
         setLoading(false)
         return
@@ -329,9 +330,11 @@ export default function InvitePage({
                 className="auth-input"
                 type="password"
                 minLength={8}
-                placeholder="Nouveau mot de passe (facultatif si déjà défini)"
+                placeholder="Choisissez un mot de passe (8 caractères min.)"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
                 data-testid="invite-password"
               />
               {error && (

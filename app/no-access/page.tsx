@@ -62,6 +62,26 @@ export default async function NoAccessPage({
               .
             </p>
             <input className="auth-input" name="name" placeholder="Votre nom (facultatif)" />
+            <input
+              className="auth-input"
+              name="password"
+              type="password"
+              minLength={8}
+              required
+              autoComplete="new-password"
+              placeholder="Choisissez un mot de passe (8 caractères min.)"
+              data-testid="no-access-password"
+            />
+            <input
+              className="auth-input"
+              name="password_confirm"
+              type="password"
+              minLength={8}
+              required
+              autoComplete="new-password"
+              placeholder="Confirmez le mot de passe"
+              data-testid="no-access-password-confirm"
+            />
             <button className="auth-submit" data-testid="no-access-claim-submit">
               Activer mon espace
             </button>
