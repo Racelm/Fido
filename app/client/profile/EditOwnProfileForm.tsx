@@ -26,7 +26,17 @@ export default function EditOwnProfileForm({ client }: { client: ClientRow }) {
   const router = useRouter()
   const [state, action, pending] = useActionState(
     async (_prev: State, formData: FormData) => {
-      const result = await updateOwnClientProfile(formData)
+      let result: { success?: boolean; error?: string }
+      try {
+        result = await updateOwnClientProfile(formData)
+      } catch {
+        // Typiquement après une nouvelle mise en ligne : la page ouverte est
+        // périmée. On évite l'écran « Application error » et on guide l'utilisateur.
+        return {
+          error: 'La page n’est plus à jour. Rechargez-la (F5) puis réessayez.',
+          success: false,
+        }
+      }
       if (result.success) {
         router.refresh()
         return { error: '', success: true }
