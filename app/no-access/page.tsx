@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { signOut } from '@/app/actions/auth'
 import { isAdminUser } from '@/lib/admin'
 import {
   claimPendingInvitation,
@@ -95,7 +94,7 @@ export default async function NoAccessPage({
           </p>
         )}
 
-        <form action={signOut} style={{ marginTop: 12 }}>
+        <form action="/auth/signout" method="post" style={{ marginTop: 12 }}>
           <button className="btn-secondary" style={{ width: '100%' }} data-testid="no-access-logout">
             Se déconnecter
           </button>

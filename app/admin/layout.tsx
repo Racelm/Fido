@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin'
-import { signOut } from '@/app/actions/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,7 +48,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <strong>{admin.isRoot ? 'Propriétaire' : 'Administrateur'}</strong>
             <span>{admin.email}</span>
           </div>
-          <form action={signOut}>
+          <form action="/auth/signout" method="post">
             <button type="submit" title="Déconnexion">
               ↩
             </button>

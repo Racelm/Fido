@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { signOut } from '@/app/actions/auth'
 import EditOwnProfileForm from './EditOwnProfileForm'
 
 export default async function ClientProfilePage() {
@@ -36,7 +35,7 @@ export default async function ClientProfilePage() {
           <p className="auth-copy">
             Votre compte n’est pas encore rattaché à un dossier client. Contactez votre cabinet.
           </p>
-          <form action={signOut}>
+          <form action="/auth/signout" method="post">
             <button className="auth-submit" type="submit">Se déconnecter</button>
           </form>
         </section>
@@ -71,7 +70,7 @@ export default async function ClientProfilePage() {
             <strong>{profile.full_name || client.contact_name || 'Client'}</strong>
             <span>{client.company_name}</span>
           </div>
-          <form action={signOut}>
+          <form action="/auth/signout" method="post">
             <button type="submit" title="Déconnexion">↩</button>
           </form>
         </div>

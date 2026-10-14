@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { signOut } from '@/app/actions/auth'
 import ClientUpload from './ClientUpload'
 import MessageForm from './MessageForm'
 import ReviewBadge from '@/app/documents/ReviewBadge'
@@ -38,7 +37,7 @@ export default async function ClientPage() {
             Votre compte est bien créé mais l’espace client n’est pas encore rattaché.
             Contactez votre cabinet.
           </p>
-          <form action={signOut}>
+          <form action="/auth/signout" method="post">
             <button className="auth-submit" type="submit">Se déconnecter</button>
           </form>
         </section>
@@ -110,7 +109,7 @@ export default async function ClientPage() {
             <strong>{profile.full_name || client.contact_name || 'Client'}</strong>
             <span>{client.company_name}</span>
           </div>
-          <form action={signOut}>
+          <form action="/auth/signout" method="post">
             <button type="submit" title="Déconnexion">↩</button>
           </form>
         </div>

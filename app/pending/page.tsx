@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { signOut } from '@/app/actions/auth'
 
 /**
  * Écran affiché aux utilisateurs dont le cabinet n'est pas (encore) actif :
@@ -61,7 +60,7 @@ export default async function PendingPage() {
             Contact : <a href={`mailto:${contact}`}>{contact}</a>
           </p>
         )}
-        <form action={signOut} style={{ marginTop: 12 }}>
+        <form action="/auth/signout" method="post" style={{ marginTop: 12 }}>
           <button className="btn-secondary" style={{ width: '100%' }} data-testid="pending-logout">
             Se déconnecter
           </button>

@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { signOut } from '@/app/actions/auth'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminUser } from '@/lib/admin'
 
@@ -89,7 +88,7 @@ export default async function Sidebar({ active, profile, items }: Props) {
           <strong>{profile.full_name || 'Utilisateur'}</strong>
           <span>{roleLabel}</span>
         </div>
-        <form action={signOut}>
+        <form action="/auth/signout" method="post">
           <button type="submit" title="Déconnexion" data-testid="signout-btn">↩</button>
         </form>
       </div>
