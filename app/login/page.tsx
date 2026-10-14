@@ -34,7 +34,7 @@ export default async function LoginPage({
     <main className="auth-page">
       <section className="auth-card" data-testid="login-card">
         <div className="auth-brand">
-          <span className="logo">F</span>Tiwizi
+          <span className="logo">T</span>Tiwizi
         </div>
         <p className="eyebrow">Espace fiduciaire</p>
         <h1>Connexion cabinet</h1>

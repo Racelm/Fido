@@ -31,7 +31,7 @@ export default async function ClientPage() {
       <main className="auth-page">
         <section className="auth-card">
           <div className="auth-brand">
-            <span className="logo">F</span>Tiwizi
+            <span className="logo">T</span>Tiwizi
           </div>
           <h1>Espace en préparation</h1>
           <p className="auth-copy">
@@ -75,7 +75,7 @@ export default async function ClientPage() {
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="sidebar-brand">
-            <span className="sidebar-logo">F</span>
+            <span className="sidebar-logo">T</span>
             <span>Tiwizi</span>
           </div>
         </div>

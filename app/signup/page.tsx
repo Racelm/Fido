@@ -14,7 +14,7 @@ export default async function SignupPage() {
     <main className="auth-page">
       <section className="auth-card" data-testid="signup-card">
         <div className="auth-brand">
-          <span className="logo">F</span>Tiwizi
+          <span className="logo">T</span>Tiwizi
         </div>
         <p className="eyebrow">Nouveau cabinet</p>
         <h1>Créer votre cabinet</h1>

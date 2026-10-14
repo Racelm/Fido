@@ -58,7 +58,7 @@ export default function InviteStaffPage({
     <main className="auth-page">
       <section className="auth-card" data-testid="invite-staff-card">
         <div className="auth-brand">
-          <span className="logo">F</span>Tiwizi
+          <span className="logo">T</span>Tiwizi
         </div>
         <p className="eyebrow">Invitation collaborateur</p>
         <h1>Rejoindre le cabinet</h1>

@@ -23,14 +23,14 @@ type Props = {
  * Server component (reçoit `profile` + nav items du parent).
  */
 export default function Sidebar({ active, profile, items }: Props) {
-  const initials = (profile.full_name || 'F').slice(0, 2).toUpperCase()
+  const initials = (profile.full_name || 'T').slice(0, 2).toUpperCase()
   const roleLabel = profile.role === 'owner' ? 'Propriétaire' : profile.role === 'staff' ? 'Collaborateur' : 'Client'
 
   return (
     <aside className="sidebar" data-testid="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-brand">
-          <span className="sidebar-logo">F</span>
+          <span className="sidebar-logo">T</span>
           <span>Tiwizi</span>
           <span className="sidebar-chevron">▾</span>
         </div>

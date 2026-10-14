@@ -23,7 +23,7 @@ export default function ErrorPage({
     <main className="auth-page">
       <section className="auth-card" data-testid="app-error">
         <div className="auth-brand">
-          <span className="logo">F</span>Tiwizi
+          <span className="logo">T</span>Tiwizi
         </div>
         <h1>Un problème est survenu</h1>
         <p className="auth-copy">

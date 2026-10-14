@@ -36,7 +36,7 @@ export default async function NoAccessPage({
     <main className="auth-page">
       <section className="auth-card" data-testid="no-access-card">
         <div className="auth-brand">
-          <span className="logo">F</span>Tiwizi
+          <span className="logo">T</span>Tiwizi
         </div>
         <p className="eyebrow">Votre compte</p>
         <h1>{pending ? 'Finaliser votre accès' : 'Aucun espace associé'}</h1>
