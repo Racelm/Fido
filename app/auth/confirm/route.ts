@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { publicOrigin, safeInternalPath } from '@/lib/site-url'
 
 /**
  * Supabase Auth confirmation handler (OTP / magic-link / invite).
@@ -11,7 +12,8 @@ import { createClient } from '@/lib/supabase/server'
  * (default : /).
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
+  const origin = publicOrigin(request)
+  const { searchParams } = new URL(request.url)
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as
     | 'signup'
@@ -20,7 +22,7 @@ export async function GET(request: NextRequest) {
     | 'recovery'
     | 'email_change'
     | null
-  const next = searchParams.get('next') || '/'
+  const next = safeInternalPath(searchParams.get('next'))
 
   if (!token_hash || !type) {
     return NextResponse.redirect(`${origin}/login?error=missing-token`)

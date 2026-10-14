@@ -3,6 +3,12 @@ import Link from 'next/link'
 import LoginForm from './LoginForm'
 import { createClient } from '@/lib/supabase/server'
 
+const LOGIN_MESSAGES: Record<string, string> = {
+  'email-confirmed':
+    'Votre e-mail est confirmé. Connectez-vous avec le mot de passe choisi pour terminer l’activation.',
+  'missing-code': 'Le lien utilisé est incomplet. Réessayez depuis l’e-mail reçu.',
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -34,6 +40,14 @@ export default async function LoginPage({
         <p className="auth-copy">
           Accédez à votre espace sécurisé pour collaborer avec vos clients.
         </p>
+        {params.error && (
+          <p
+            className={params.error === 'email-confirmed' ? 'auth-notice' : 'auth-error'}
+            data-testid="login-url-error"
+          >
+            {LOGIN_MESSAGES[params.error] || 'Le lien utilisé est invalide ou a expiré.'}
+          </p>
+        )}
         <LoginForm redirect={params.redirect || ''} />
         <p className="auth-copy" style={{ marginTop: 18 }}>
           Vous n’avez pas encore de cabinet ?{' '}

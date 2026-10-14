@@ -4,7 +4,14 @@ import { FormEvent, use, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { acceptInvitation, getInvitationInfo } from '@/app/actions/invite'
 
-type Mode = 'checking' | 'invalid' | 'other-session' | 'needs-password' | 'authed-set-password' | 'done'
+type Mode =
+  | 'checking'
+  | 'invalid'
+  | 'other-session'
+  | 'needs-password'
+  | 'check-email'
+  | 'authed-set-password'
+  | 'done'
 
 export default function InvitePage({
   params,
@@ -20,6 +27,7 @@ export default function InvitePage({
   const [otherEmail, setOtherEmail] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [notice, setNotice] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -32,6 +40,12 @@ export default function InvitePage({
         return
       }
       setEmail(info.email)
+      const urlError = new URLSearchParams(window.location.search).get('error')
+      if (urlError === 'link-expired' || urlError === 'missing-code') {
+        setNotice(
+          'Le lien de confirmation a expiré ou a déjà été utilisé. Demandez un nouvel e-mail ci-dessous.'
+        )
+      }
 
       const supabase = createClient()
       const { data } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }))
@@ -60,6 +74,27 @@ export default function InvitePage({
     }
   }, [token])
 
+  function confirmRedirectUrl() {
+    return `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/invite/${token}`)}`
+  }
+
+  async function resendConfirmation() {
+    setLoading(true)
+    setError('')
+    const { error: resendError } = await createClient().auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: confirmRedirectUrl() },
+    })
+    if (resendError) {
+      setError(resendError.message)
+    } else {
+      setNotice('')
+      setMode('check-email')
+    }
+    setLoading(false)
+  }
+
   async function switchAccount() {
     setLoading(true)
     await createClient().auth.signOut()
@@ -81,7 +116,7 @@ export default function InvitePage({
       options: {
         data: { full_name: name },
         // Après confirmation de l'e-mail, retour sur cette invitation pour la finaliser
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/invite/${token}`)}`,
+        emailRedirectTo: confirmRedirectUrl(),
       },
     })
     if (signUpError) {
@@ -90,9 +125,8 @@ export default function InvitePage({
       return
     }
     if (!data.session) {
-      setError(
-        'Un e-mail de confirmation vient de vous être envoyé. Cliquez sur le lien qu’il contient pour terminer l’activation de votre espace.'
-      )
+      // Confirmation d'e-mail activée : on attend le clic sur le lien
+      setMode('check-email')
       setLoading(false)
       return
     }
@@ -197,6 +231,20 @@ export default function InvitePage({
               Bienvenue ! Créez votre accès sécurisé à l’espace Tiwizi pour{' '}
               <strong>{email}</strong>.
             </p>
+            {notice && (
+              <div className="auth-notice" style={{ display: 'grid', gap: 8 }} data-testid="invite-notice">
+                <span>{notice}</span>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={resendConfirmation}
+                  disabled={loading}
+                  data-testid="invite-resend"
+                >
+                  Renvoyer l’e-mail de confirmation
+                </button>
+              </div>
+            )}
             <form onSubmit={submitNewAccount} className="auth-form" data-testid="invite-form">
               <input
                 className="auth-input"
@@ -241,6 +289,25 @@ export default function InvitePage({
               </button>
             </form>
           </>
+        )}
+
+        {mode === 'check-email' && (
+          <div style={{ display: 'grid', gap: 10 }} data-testid="invite-check-email">
+            <p className="auth-notice">
+              ✉️ Un e-mail de confirmation a été envoyé à <strong>{email}</strong>. Ouvrez-le et
+              cliquez sur le lien pour activer votre espace (pensez à vérifier les indésirables).
+            </p>
+            {error && <p className="auth-error">{error}</p>}
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={resendConfirmation}
+              disabled={loading}
+              data-testid="invite-resend"
+            >
+              {loading ? 'Envoi...' : 'Renvoyer l’e-mail'}
+            </button>
+          </div>
         )}
 
         {mode === 'authed-set-password' && (

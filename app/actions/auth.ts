@@ -3,11 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { safeInternalPath } from '@/lib/site-url'
 
 export async function signIn(formData: FormData) {
   const email = String(formData.get('email') || '').trim().toLowerCase()
   const password = String(formData.get('password') || '')
-  const redirectTo = String(formData.get('redirect') || '').trim()
+  const redirectTo = safeInternalPath(String(formData.get('redirect') || '').trim(), '')
 
   if (!email || !password) return { error: 'E-mail et mot de passe requis.' }
 
