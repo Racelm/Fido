@@ -15,7 +15,7 @@ export default async function MessagesPage() {
     .select('full_name,role,organization_id,organizations(name)')
     .eq('id', user.id)
     .single()
-  if (!profile) redirect('/login')
+  if (!profile) redirect('/no-access')
 
   const { data: messages } = await supabase
     .from('messages')

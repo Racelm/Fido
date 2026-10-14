@@ -15,7 +15,7 @@ export default async function SettingsPage() {
     .select('full_name,role,organization_id,organizations(name)')
     .eq('id', user.id)
     .single()
-  if (!profile) redirect('/login')
+  if (!profile) redirect('/no-access')
 
   const roleLabel =
     profile.role === 'owner'

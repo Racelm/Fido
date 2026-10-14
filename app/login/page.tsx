@@ -26,7 +26,8 @@ export default async function LoginPage({
       .select('role')
       .eq('id', user.id)
       .maybeSingle()
-    redirect(profile?.role === 'client' ? '/client' : '/')
+    if (!profile) redirect('/no-access')
+    redirect(profile.role === 'client' ? '/client' : '/')
   }
 
   return (

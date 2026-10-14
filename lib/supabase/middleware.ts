@@ -53,7 +53,7 @@ export async function updateSession(request: NextRequest) {
       .eq('id', user.id)
       .maybeSingle()
     const url = request.nextUrl.clone()
-    url.pathname = profile?.role === 'client' ? '/client' : '/'
+    url.pathname = !profile ? '/no-access' : profile.role === 'client' ? '/client' : '/'
     url.searchParams.delete('redirect')
     return NextResponse.redirect(url)
   }

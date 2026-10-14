@@ -14,7 +14,7 @@ export default async function NotificationsPage() {
     .select('full_name,role,organization_id,organizations(name)')
     .eq('id', user.id)
     .single()
-  if (!profile) redirect('/login')
+  if (!profile) redirect('/no-access')
 
   const { data: notifications } = await supabase
     .from('notifications')

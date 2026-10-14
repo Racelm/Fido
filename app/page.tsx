@@ -128,7 +128,7 @@ export default async function DashboardPage() {
     .select('full_name, role, organization_id, organizations(name)')
     .eq('id', user.id)
     .maybeSingle()
-  if (!profile) redirect('/login')
+  if (!profile) redirect('/no-access')
   if (profile.role === 'client') redirect('/client')
 
   const orgId = profile.organization_id

@@ -1,6 +1,7 @@
 'use server'
 
 import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { createHash } from 'crypto'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
@@ -77,4 +78,70 @@ export async function acceptInvitation(rawToken: string, userName: string) {
   })
   if (error) return { error: error.message }
   return { success: true, clientId }
+}
+
+/**
+ * Invitation en attente pour l'utilisateur connecté (sans profil), retrouvée
+ * via son adresse e-mail confirmée. Sert de filet de sécurité quand le lien
+ * d'invitation n'a pas pu être finalisé (lien ouvert sur un autre appareil…).
+ */
+async function pendingInvitationForCurrentUser(): Promise<{
+  tokenHash: string
+  cabinetName: string
+  clientCompany: string
+} | null> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user?.email || !user.email_confirmed_at) return null
+
+  const admin = adminClient()
+  if (!admin) return null
+  const { data } = await admin
+    .from('client_invitations')
+    .select('token_hash, expires_at, clients(company_name, organizations(name))')
+    // ilike = comparaison insensible à la casse ; on échappe les jokers % et _
+    .ilike('email', user.email.replace(/[\\%_]/g, (c) => `\\${c}`))
+    .is('accepted_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (!data) return null
+
+  const client = (Array.isArray(data.clients) ? data.clients[0] : data.clients) as
+    | { company_name?: string | null; organizations?: { name?: string | null } | { name?: string | null }[] | null }
+    | null
+  const org = Array.isArray(client?.organizations) ? client?.organizations[0] : client?.organizations
+  return {
+    tokenHash: data.token_hash as string,
+    cabinetName: org?.name || 'votre cabinet',
+    clientCompany: client?.company_name || '',
+  }
+}
+
+/** Résumé affichable (sans le hash du jeton) de l'invitation en attente. */
+export async function findPendingInvitationForCurrentUser(): Promise<{
+  cabinetName: string
+  clientCompany: string
+} | null> {
+  const pending = await pendingInvitationForCurrentUser()
+  return pending ? { cabinetName: pending.cabinetName, clientCompany: pending.clientCompany } : null
+}
+
+/** Finalise l'invitation en attente de l'utilisateur connecté (e-mail vérifié). */
+export async function claimPendingInvitation(formData: FormData): Promise<void> {
+  const name = String(formData.get('name') || '').trim()
+  const pending = await pendingInvitationForCurrentUser()
+  if (!pending) redirect('/no-access?error=none')
+
+  const supabase = await createClient()
+  // La fonction SQL vérifie que l'e-mail du JWT correspond à l'invitation.
+  const { error } = await supabase.rpc('claim_client_invitation', {
+    invitation_token_hash: pending.tokenHash,
+    user_name: name,
+  })
+  if (error) redirect(`/no-access?error=${encodeURIComponent(error.message)}`)
+  redirect('/client')
 }
